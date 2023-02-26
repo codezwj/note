@@ -1141,4 +1141,201 @@ public File(File parent,String child)	//根据一个父File对象和子文件路
 //Windows和DOS系统默认使用"\"来表示
 //UNIX和URL使用"/"来表示
 ```
+- 常用方法
 
+  ```java
+  public String getAbsolutePath();//获取绝对路径
+  public String getPath();//获取路径
+  public String getName();//获取名称
+  public String getParent();//获取上层摁键目录路径，若无，返回null
+  public long length();//获取文件长度（即字节数），不能获取目录的长度
+  public long lastModified();//获取最后一次的修改时间，毫秒值
+  public String[] list();//获取指定目录下的所有文件或者文件目录的名称数组
+  public File[] listFiles();//获取指定目录下的所有文件或者文件目录的File数组
+  public boolean renameTo(File dest);//把文件重命名为指定的文件路径
+  //file1.renameTo(file2);要保证返回true，需要file1在硬盘中存在，且file2不能在硬盘中存在
+  ```
+
+
+**IO流**
+
+1. 流的分类
+
+   - 操作数据单位：字节流，字符流
+   - 数据的流向：输入流，输出流
+   - 流的角色：节点流，处理流
+
+2. 流的体系结构
+
+   - 抽象基类							节点流（或文件流）          缓冲流（处理流的一种）
+     - InputStream			  FileInputStream                BufferedInputStream
+     - OutputStream           FileOutputStream             BufferedOutputStream
+     - Reader                        FileReader                          BufferedReader
+     - Writer                          FileWriter                           BufferedWriter
+
+3. File读入/写出操作
+
+   - File类的实例化
+
+     `File file = new File("hello.txt")`
+
+   - FileReader/FileWriter流的实例化
+
+     `FileReader fr = new FileReader(file)`
+
+   - 读入/写出的操作
+
+     `fr.read()`
+
+     `char[] cbuf = new char[5]//返回每次读入cbuf数组中的字符的个数，如果达到文件末尾，返回-1`
+
+   - 资源的关闭
+
+   说明：输出操作对应的File文件可以不存在，如果不存在，
+
+   ​	在输出的过程中，会自动那个创建此文件，
+
+   ​	如果存在：如果流使用的构造器是：`FileWriter(file,false)/FileWriter(file)`：对原有文件的覆盖
+
+   ​	如果流使用的构造器是`FileWriter(file,true)`：会在原有文件基础上追加内容
+
+**FileInput/OutputStream**
+
+```java
+try{
+	//获取文件
+	File file = new ("hello.txt");
+	//实例化流
+	FileInputStream fis = new FileInputStream(file);
+	//读数据
+	byte[] buffer = new byte[5];
+	int len;
+	while((len = fis.read(buffer)) != -1){
+    String str = new String(buffer,0,len);
+    System.out.print(str);
+	}
+} catch(IOException e){
+    e.printStackTrace();
+}finally {
+    //关闭资源
+    if(fis != null) fis.close(); 
+}
+```
+
+1. 对于文本文件(txt,java,c,cpp)，使用字符流处理
+2. 对于非文本文件，使用字节流处理
+
+**缓冲流**
+
+作用：提供流的读取，写入的速度
+
+原因：内部提供了一个缓冲区
+
+```java
+//读取文件
+File srcFile = new File("xxx.jpg");
+File destFile = new FIle("xxxd.jpg");
+
+//实例化节点流
+FileInputStream fis = new FileInputStream(srcFile);
+FileInputStream fos = new FileInputStream(destFile);
+
+//实例化缓冲流
+BufferedInputStream bis = new BufferedInputStream(fis);
+BufferedOutputStream bos = new BufferedOutputStream(fos);
+
+//复制的细节，读取，写入
+byte[] buffer = new byte[10];
+int len;
+while((len = bis.read(buffer)) != -1){
+    bos.write(buffer,0,len);
+}
+
+//资源关闭
+//先关闭外层流，再关闭内层流
+bos.close();
+bis.close();
+//关闭外层流时，内层流会自动关闭，关闭内层流可以省略
+fos.close();
+fis.close();
+```
+
+**转换流**
+
+1. 转换流：属于字符流
+
+   InputStreamReader：将一个字节的输入睿转换为字符的输入流
+
+   OutputStreamWriter：将一个字符的输出流转换为字节的输出流
+
+2. 作用：提供字节流与字符流之间的转换
+
+3. 解码：字节，字节数组 ---> 字符数组，字符串
+
+   编码：字符数组，字符串 ---> 字节，字节数组
+
+**对象流**
+
+1. 对象的序列化
+   - 对象序列机制允许把内存中的java对象转换成平台无关的二进制流，从而允许把着中国二进制流持久的保存在磁盘上，或通过网络将着这种二进制流传输到另一个网络节点，当其他程序获取了这种二进制流，就可以恢复成原来的Java对象
+2. 如果需要让某个对象支持序列化机制，则必须让对象所属的类及其属性是可序列化的，为了让某个类是可序列化的，该类必须实现如下两个接口之一，否则会抛出NotSeralizableException异常
+   - Seriallzable
+   - Externallzable
+
+**RandomAccessFile的使用**
+
+1. RandomAccessFile直接继承于java.lang.Object类，实现了DataInput和DataOutput接口
+2. RandomAccessFile既可以作为一个输入流，又可以作为一个输出流
+
+**网络通信**
+
+在Java中使用InetAddress类代替IP
+
+- 端口号标识正在计算机上运行的进程
+  - 不同的进程由不同的端口号
+  - 被规定为一个16位的整数0-65535
+  - 端口分类：
+    - 公认端口：0-1023，被预先定义的服务通信占用
+    - 注册端口：1024-49151，分配给用户进程或应用程序
+    - 动态私有端口：49152-65535
+- 端口号于IP地址的组合得出一个网络套接字：Socket
+
+**网络通信协议**
+
+- TCP/IP协议
+  - 传输层协议中有两个非常重要的协议：
+    - 传输控制协议TCP
+    - 用户数据协议UDP
+  - TCP/IP 以其两个主要协议：传输控制协议（TCP）和网络互联协议（IP）而得名，实际上是一组协议，包括多个具有不同功能且互为关联的协议
+  - IP协议是网络层的主要协议，支持网间互连的数据通信
+  - TCP/IP协议模型从更使用的角度出发，形成了高效的四层体系结构，即物理链路层，IP层，传输层和应用层
+  - TCP协议：
+    - 是同TCP协议前，须先建立TCP连接，形成传输通道
+    - 传输前，采用“三次握手”方式，点对点通信，是可靠
+    - TCP协议进行通信的两个应用进程：客户端，服务端
+    - 在连接中可进行大数据的传输
+    - 传输完毕，需释放已建立的连接，效率低
+  - UDP协议：
+    - 将数据，源，目的封装成数据包，不需要建立连接
+    - 每个数据报的大小限制在64k内
+    - 发送不管对方是否准备好，接收方收到也不确认，故是不可靠的
+    - 可以广播发送
+    - 发送数据结束时无需释放资源，开销小，速度快
+  - URL类
+    - URL：统一资源定位符，它标识Internet上某一资源的地址
+    - 它是一种具体的URI，即URL可以用来标识一个资源，而且还指明了如何locate这个资源
+    - URL的基本结构由5部分组成：
+      - <传输协议>://<主机名>:<端口号>/<文件名>#片段名?参数列表
+
+**反射**
+
+- 反射机制允许程序在执行期间借助于Reflection API取得任何类的内部信息，并能直接操作任意对象的内部属性及其方法
+- 加载完类之后，在堆内存的方法区中就产生了一个Class类型的对象（一个类只有一个Class对象），这个对象就包含了完整的类的结构信息，我们可以通过这个对象看到类的结构，这个对象就像一面镜子，透过这个镜子看到类的节后，所以，我们形象的称之为：反射
+- Java反射机制提供的功能
+  - 在允许时判断任意一个对象所属的类
+  - 在运行时构造任意一个类的对象
+  - 在运行时判断任意一个类所具有的成员变量和方法
+  - 在运行时后去泛型信息
+  - 在运行时调用任意一个对象的成员变量和方法
+  - 在运行时处理注解
+  - 生成动态代理
